@@ -49,6 +49,18 @@ namespace StockAnalyzerProject // Project namespace
         private const int TIMER_MIN = 100; // Fastest allowed tick interval
         private const int TIMER_MAX = 2000; // Slowest allowed tick interval
 
+        // Visual theme colors for a clean light dashboard style.
+        private static readonly Color UiWindow = Color.FromArgb(244, 247, 252);
+        private static readonly Color UiPanel = Color.FromArgb(232, 238, 247);
+        private static readonly Color UiPanelSoft = Color.FromArgb(239, 244, 251);
+        private static readonly Color UiText = Color.FromArgb(29, 42, 61);
+        private static readonly Color UiMutedText = Color.FromArgb(95, 108, 130);
+        private static readonly Color UiBorder = Color.FromArgb(189, 199, 214);
+        private static readonly Color UiGrid = Color.FromArgb(222, 229, 238);
+        private static readonly Color UiBull = Color.FromArgb(44, 140, 108);
+        private static readonly Color UiBear = Color.FromArgb(211, 90, 84);
+        private static readonly Color UiAccent = Color.FromArgb(63, 102, 176);
+
         /// <summary>
         /// Default constructor. Initializes UI controls, wires events safely, creates recognizers,
         /// and configures simulation timer + speed controls. Does not load data.
@@ -56,6 +68,7 @@ namespace StockAnalyzerProject // Project namespace
         public Form_Main()
         {
             InitializeComponent(); // Create the WinForms controls designed in the Designer
+            ApplyVisualTheme(); // Apply control/chrome styling before data is loaded
 
             if (this.dateTimePicker_start != null) // Make sure the control exists before using it
                 this.dateTimePicker_start.Value = DateTime.Today.AddMonths(-6); // Pick a helpful default start date
@@ -429,15 +442,72 @@ namespace StockAnalyzerProject // Project namespace
         /// </summary>
         private void ApplyChartPresentation()
         {
+            if (chart_PanelMain == null || chart_PanelMain.ChartAreas.Count < 2) return; // Require chart and both areas
+
             var path = openFileDialog_selectCsv.FileName; // Get the file currently loaded
             var fileNoExt = string.IsNullOrEmpty(path) ? string.Empty : Path.GetFileNameWithoutExtension(path); // Derive base file name
             bool isDaily = fileNoExt.EndsWith("-Day", StringComparison.OrdinalIgnoreCase); // Infer daily periodicity by naming convention
 
             var sOhlc = chart_PanelMain.Series["Series_OHLC"]; // Candlestick series reference
             var sVol = chart_PanelMain.Series["Series_Volume"]; // Volume series reference
+            var areaOhlc = chart_PanelMain.ChartAreas["ChartArea_OHLC"]; // Main price area
+            var areaVol = chart_PanelMain.ChartAreas["ChartArea_Volume"]; // Volume area
 
             sOhlc.IsXValueIndexed = isDaily; // If daily, treat X values as indexed to eliminate weekend gaps
             sVol.IsXValueIndexed = isDaily; // Keep volume aligned with candle positions
+            sOhlc.CustomProperties = "PriceDownColor=" + ColorTranslator.ToHtml(UiBear) + ", PriceUpColor=" + ColorTranslator.ToHtml(UiBull); // Use softer candle colors
+            sOhlc.BorderWidth = 1; // Keep candle outlines thin and crisp
+            sVol.Color = Color.FromArgb(170, UiAccent); // Semi-opaque volume bars
+            sVol.BorderWidth = 0; // Avoid visual noise on volume bars
+
+            chart_PanelMain.Palette = ChartColorPalette.None; // Use explicit series colors
+            chart_PanelMain.BackColor = UiWindow; // Blend chart into form background
+            chart_PanelMain.BorderlineColor = UiBorder; // Subtle frame
+            chart_PanelMain.BorderlineDashStyle = ChartDashStyle.Solid;
+            chart_PanelMain.BorderlineWidth = 1;
+            chart_PanelMain.AntiAliasing = AntiAliasingStyles.All; // Smooth lines and shapes
+            chart_PanelMain.TextAntiAliasingQuality = TextAntiAliasingQuality.High;
+
+            areaOhlc.BackColor = Color.White;
+            areaOhlc.BackSecondaryColor = Color.FromArgb(247, 250, 255);
+            areaOhlc.BackGradientStyle = GradientStyle.TopBottom;
+            areaOhlc.BorderColor = UiBorder;
+            areaOhlc.BorderWidth = 1;
+            areaOhlc.Position.Auto = false; // Use explicit split between price and volume
+            areaOhlc.Position.X = 4f;
+            areaOhlc.Position.Y = 8f;
+            areaOhlc.Position.Width = 92f;
+            areaOhlc.Position.Height = 62f;
+
+            areaOhlc.AxisX.LabelStyle.Enabled = false; // Show date labels only on the volume pane
+            areaOhlc.AxisX.MajorGrid.Enabled = false;
+            areaOhlc.AxisX.LineColor = UiBorder;
+            areaOhlc.AxisX.LabelStyle.ForeColor = UiMutedText;
+            areaOhlc.AxisY.LabelStyle.ForeColor = UiMutedText;
+            areaOhlc.AxisY.LineColor = UiBorder;
+            areaOhlc.AxisY.MajorGrid.Enabled = true;
+            areaOhlc.AxisY.MajorGrid.LineColor = UiGrid;
+            areaOhlc.AxisY.MajorGrid.LineDashStyle = ChartDashStyle.Dash;
+
+            areaVol.AlignWithChartArea = areaOhlc.Name;
+            areaVol.BackColor = Color.White;
+            areaVol.BackSecondaryColor = Color.FromArgb(247, 250, 255);
+            areaVol.BackGradientStyle = GradientStyle.TopBottom;
+            areaVol.BorderColor = UiBorder;
+            areaVol.BorderWidth = 1;
+            areaVol.Position.Auto = false;
+            areaVol.Position.X = 4f;
+            areaVol.Position.Y = 73f;
+            areaVol.Position.Width = 92f;
+            areaVol.Position.Height = 19f;
+
+            areaVol.AxisX.MajorGrid.Enabled = false;
+            areaVol.AxisX.LineColor = UiBorder;
+            areaVol.AxisX.LabelStyle.ForeColor = UiMutedText;
+            areaVol.AxisY.IsStartedFromZero = true;
+            areaVol.AxisY.MajorGrid.Enabled = false;
+            areaVol.AxisY.LabelStyle.Enabled = false;
+            areaVol.AxisY.LineColor = UiBorder;
 
             if (chart_PanelMain.Legends.Count > 0) // If a legend exists
                 chart_PanelMain.Legends.Clear(); // Remove it to avoid wasting chart space
@@ -448,8 +518,111 @@ namespace StockAnalyzerProject // Project namespace
             var title = new Title(); // Create a new chart title object
             title.Text = titleText; // Set title text
             title.Alignment = ContentAlignment.TopCenter; // Center title horizontally
+            title.ForeColor = UiText;
+            title.Font = new Font("Segoe UI Semibold", 11f, FontStyle.Bold);
+            title.Docking = Docking.Top;
 
             chart_PanelMain.Titles.Add(title); // Add title to chart
+        }
+
+        /// <summary>
+        /// Applies a cohesive style to form chrome and controls so the dashboard looks intentional and readable.
+        /// </summary>
+        private void ApplyVisualTheme()
+        {
+            this.BackColor = UiWindow;
+            this.ForeColor = UiText;
+            this.Text = "Stock Analyzer";
+            this.Font = new Font("Segoe UI", 10f, FontStyle.Regular, GraphicsUnit.Point);
+
+            if (flowLayoutPanel_top != null)
+            {
+                flowLayoutPanel_top.BackColor = UiPanel;
+                flowLayoutPanel_top.Padding = new Padding(10, 8, 10, 8);
+            }
+
+            if (flowLayoutPanel_timer != null)
+            {
+                flowLayoutPanel_timer.BackColor = UiPanelSoft;
+                flowLayoutPanel_timer.Padding = new Padding(10, 6, 10, 0);
+            }
+
+            if (tableLayoutPanel_options != null)
+                tableLayoutPanel_options.BackColor = UiWindow;
+
+            if (label_start != null)
+            {
+                label_start.ForeColor = UiText;
+                label_start.Text = "Start:";
+            }
+
+            if (label_end != null)
+            {
+                label_end.ForeColor = UiText;
+                label_end.Text = "End:";
+            }
+
+            if (dateTimePicker_start != null)
+                dateTimePicker_start.CalendarMonthBackground = Color.White;
+
+            if (dateTimePicker_end != null)
+                dateTimePicker_end.CalendarMonthBackground = Color.White;
+
+            StyleActionButton(button_loadData, UiAccent, Color.White);
+            StyleActionButton(button_update, Color.FromArgb(67, 91, 122), Color.White);
+            StyleActionButton(button_simulate, Color.FromArgb(233, 169, 80), Color.FromArgb(40, 34, 20));
+
+            if (comboBox_patterns != null)
+            {
+                comboBox_patterns.BackColor = Color.White;
+                comboBox_patterns.ForeColor = UiText;
+                comboBox_patterns.FlatStyle = FlatStyle.Flat;
+                comboBox_patterns.Width = 190;
+            }
+
+            if (textBox_valueTimer != null)
+            {
+                textBox_valueTimer.BackColor = Color.White;
+                textBox_valueTimer.ForeColor = UiText;
+                textBox_valueTimer.BorderStyle = BorderStyle.FixedSingle;
+                textBox_valueTimer.TextAlign = HorizontalAlignment.Center;
+            }
+        }
+
+        /// <summary>
+        /// Normalizes button styling across the dashboard.
+        /// </summary>
+        private void StyleActionButton(Button button, Color backColor, Color foreColor)
+        {
+            if (button == null) return;
+
+            button.FlatStyle = FlatStyle.Flat;
+            button.FlatAppearance.BorderSize = 0;
+            button.BackColor = backColor;
+            button.ForeColor = foreColor;
+            button.Font = new Font("Segoe UI Semibold", 9.5f, FontStyle.Bold, GraphicsUnit.Point);
+            button.Padding = new Padding(10, 6, 10, 6);
+        }
+
+        /// <summary>
+        /// Chooses an annotation color based on recognizer semantic meaning.
+        /// </summary>
+        private Color ResolveAnnotationColor(Recognizer recognizer, aSmartCandlestick candle)
+        {
+            if (recognizer == null) return UiAccent;
+
+            var name = recognizer.Name ?? string.Empty;
+
+            if (name.IndexOf("Bullish", StringComparison.OrdinalIgnoreCase) >= 0) return UiBull;
+            if (name.IndexOf("Bearish", StringComparison.OrdinalIgnoreCase) >= 0) return UiBear;
+
+            if (candle != null)
+            {
+                if (candle.isBullish) return UiBull;
+                if (candle.isBearish) return UiBear;
+            }
+
+            return UiAccent;
         }
 
         /// <summary>
@@ -973,6 +1146,7 @@ namespace StockAnalyzerProject // Project namespace
                         var prevPoint = sOhlc.Points[firstIdx]; // Get previous chart point
                         if (scPrev != null && prevPoint != null) // Ensure both exist
                         {
+                            var matchColor = ResolveAnnotationColor(rec, sc); // Color-code the shape by signal context
                             double x1 = isIndexed ? (firstIdx + 1.0) : prevPoint.XValue; // Compute X for first candle
                             double x2 = isIndexed ? (i + 1.0) : chartPoint.XValue; // Compute X for second candle
 
@@ -1006,9 +1180,9 @@ namespace StockAnalyzerProject // Project namespace
                                 AxisY = area.AxisY, // Anchor Y to chart axis
                                 IsSizeAlwaysRelative = false, // Use axis units rather than percentages
                                 ClipToChartArea = area.Name, // Clip to visible plot region
-                                LineColor = Color.Black, // Border color
+                                LineColor = matchColor, // Border color
                                 LineWidth = 2, // Border thickness
-                                BackColor = Color.Transparent, // Transparent fill
+                                BackColor = Color.FromArgb(24, matchColor), // Soft fill for visibility without blocking candles
                                 X = xLeft, // Set left coordinate
                                 Y = y, // Set bottom coordinate
                                 Width = xWidth, // Set width
@@ -1030,6 +1204,7 @@ namespace StockAnalyzerProject // Project namespace
                 double arrowHeight = candleHigh - arrowTopY; // Arrow height down to candle
 
                 double xCand = isIndexed ? (i + 1.0) : chartPoint.XValue; // X coordinate used to place arrow above candle
+                var arrowColor = ResolveAnnotationColor(rec, sc); // Color-code arrow by bullish/bearish context
 
                 var line = new LineAnnotation // Create arrow annotation
                 {
@@ -1037,8 +1212,8 @@ namespace StockAnalyzerProject // Project namespace
                     AxisY = area.AxisY, // Anchor Y to axis
                     IsSizeAlwaysRelative = false, // Use axis units
                     ClipToChartArea = area.Name, // Clip within chart area
-                    LineColor = Color.Black, // Arrow color
-                    LineWidth = 1, // Arrow thickness
+                    LineColor = arrowColor, // Arrow color
+                    LineWidth = 2, // Arrow thickness
                     StartCap = LineAnchorCapStyle.None, // No start cap
                     EndCap = LineAnchorCapStyle.Arrow, // Arrow head at end
                     X = xCand, // X position
