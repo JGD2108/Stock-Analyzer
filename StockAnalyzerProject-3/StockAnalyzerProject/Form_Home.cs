@@ -3,7 +3,6 @@ using System;               // Brings in core types like EventArgs and DateTime
 using System.ComponentModel; // Provides CancelEventArgs used by FileOk handler
 using System.IO;            // Used for Path helpers (file name without extension)
 using System.Windows.Forms; // Windows Forms UI framework types (Form, OpenFileDialog, MessageBox)
-using System.Drawing;       // Colors and fonts for UI styling
 
 namespace StockAnalyzerProject // Groups related types for this application
 {
@@ -15,9 +14,6 @@ namespace StockAnalyzerProject // Groups related types for this application
     {
         private string fileName;     // Holds the last-selected file path (convenience field)
         private string[] fileNames;  // Holds all selected file paths when MultiSelect is used
-        private static readonly Color UiWindow = Color.FromArgb(244, 247, 252); // App background
-        private static readonly Color UiText = Color.FromArgb(29, 42, 61); // Main text tone
-        private static readonly Color UiAccent = Color.FromArgb(63, 102, 176); // Primary action color
 
         /// <summary>
         /// Initializes the Home form and its designer-defined controls.
@@ -25,33 +21,6 @@ namespace StockAnalyzerProject // Groups related types for this application
         public Form_Home()
         {
             InitializeComponent(); // Creates and lays out controls added via the Designer
-            ApplyVisualTheme(); // Apply cohesive styling for the home screen
-        }
-
-        /// <summary>
-        /// Applies a cleaner, cohesive look to the home screen controls.
-        /// </summary>
-        private void ApplyVisualTheme()
-        {
-            this.BackColor = UiWindow;
-            this.ForeColor = UiText;
-            this.Text = "Stock Analyzer - Home";
-            this.StartPosition = FormStartPosition.CenterScreen;
-            this.MinimumSize = new Size(980, 300);
-            this.Font = new Font("Segoe UI", 10f, FontStyle.Regular, GraphicsUnit.Point);
-
-            if (label_startDate != null) label_startDate.ForeColor = UiText;
-            if (label_EndDate != null) label_EndDate.ForeColor = UiText;
-
-            if (button_loadTicker != null)
-            {
-                button_loadTicker.Text = "Open CSV";
-                button_loadTicker.FlatStyle = FlatStyle.Flat;
-                button_loadTicker.FlatAppearance.BorderSize = 0;
-                button_loadTicker.BackColor = UiAccent;
-                button_loadTicker.ForeColor = Color.White;
-                button_loadTicker.Font = new Font("Segoe UI Semibold", 10f, FontStyle.Bold, GraphicsUnit.Point);
-            }
         }
 
         /// <summary>
