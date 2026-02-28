@@ -26,8 +26,6 @@ namespace StockAnalyzerProject // Groups related types for this application
         {
             InitializeComponent(); // Creates and lays out controls added via the Designer
             ApplyVisualTheme(); // Apply cohesive styling for the home screen
-            this.Resize += Form_Home_Resize; // Keep proportional layout when window size changes
-            this.Shown += Form_Home_Shown; // Perform one layout pass once dimensions are final
         }
 
         /// <summary>
@@ -39,7 +37,7 @@ namespace StockAnalyzerProject // Groups related types for this application
             this.ForeColor = UiText;
             this.Text = "Stock Analyzer - Home";
             this.StartPosition = FormStartPosition.CenterScreen;
-            this.MinimumSize = new Size(920, 300);
+            this.MinimumSize = new Size(980, 300);
             this.Font = new Font("Segoe UI", 10f, FontStyle.Regular, GraphicsUnit.Point);
 
             if (label_startDate != null) label_startDate.ForeColor = UiText;
@@ -54,64 +52,7 @@ namespace StockAnalyzerProject // Groups related types for this application
                 button_loadTicker.ForeColor = Color.White;
                 button_loadTicker.Font = new Font("Segoe UI Semibold", 10f, FontStyle.Bold, GraphicsUnit.Point);
             }
-
-            ArrangeHomeLayout();
         }
-
-        /// <summary>
-        /// Keeps the Home controls balanced and proportional across window sizes.
-        /// </summary>
-        private void ArrangeHomeLayout()
-        {
-            if (label_startDate == null || label_EndDate == null || dateTimePicker_startDate == null || dateTimePicker_endDate == null || button_loadTicker == null)
-                return;
-
-            int padX = 34;
-            int padY = 34;
-            int labelW = 95;
-            int gap = 12;
-            int rowGap = 20;
-            int buttonW = 140;
-            int buttonH = 40;
-            int rowH = Math.Max(dateTimePicker_startDate.Height, dateTimePicker_endDate.Height);
-
-            int left = padX;
-            int right = Math.Max(left + 300, this.ClientSize.Width - padX);
-            int inputLeft = left + labelW + gap;
-            int y1 = padY;
-            int y2 = y1 + rowH + rowGap;
-
-            int rowInputWidth = Math.Max(220, right - inputLeft);
-            int buttonX = right - buttonW;
-            int row2PickerWidth = buttonX - gap - inputLeft;
-            bool placeButtonBelow = row2PickerWidth < 220;
-
-            if (placeButtonBelow)
-                row2PickerWidth = rowInputWidth;
-
-            label_startDate.Text = "Start Date:";
-            label_EndDate.Text = "End Date:";
-
-            label_startDate.Location = new Point(left, y1 + 6);
-            label_startDate.Size = new Size(labelW, rowH);
-
-            dateTimePicker_startDate.Location = new Point(inputLeft, y1);
-            dateTimePicker_startDate.Size = new Size(rowInputWidth, rowH);
-
-            label_EndDate.Location = new Point(left, y2 + 6);
-            label_EndDate.Size = new Size(labelW, rowH);
-
-            dateTimePicker_endDate.Location = new Point(inputLeft, y2);
-            dateTimePicker_endDate.Size = new Size(row2PickerWidth, rowH);
-
-            button_loadTicker.Size = new Size(buttonW, buttonH);
-            button_loadTicker.Location = placeButtonBelow
-                ? new Point(inputLeft, y2 + rowH + rowGap - 2)
-                : new Point(buttonX, y2 - 2);
-        }
-
-        private void Form_Home_Shown(object sender, EventArgs e) => ArrangeHomeLayout(); // First-pass final layout
-        private void Form_Home_Resize(object sender, EventArgs e) => ArrangeHomeLayout(); // Resize-aware layout
 
         /// <summary>
         /// Placeholder click handler for a label on the form (not used).
