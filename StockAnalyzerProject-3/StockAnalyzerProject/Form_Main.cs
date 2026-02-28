@@ -44,6 +44,7 @@ namespace StockAnalyzerProject // Project namespace
 
         private bool _simulationActive; // True while the timer is actively stepping candles
         private bool _simulationCompleted; // True once all candles in range have been shown (safe to annotate)
+        private bool _toolbarLayoutComposed; // Tracks one-time composition of the top toolbar control order
 
         // Bounds for UI timer speed controls (milliseconds)
         private const int TIMER_MIN = 100; // Fastest allowed tick interval
@@ -104,6 +105,10 @@ namespace StockAnalyzerProject // Project namespace
 
             EnsurePatternComboBox(); // Bind the drop-down to available recognizers
             ConfigureTimerControls(); // Sync scrollbar/textbox to timer interval
+            ArrangeTopControlLayout(); // Ensure toolbar/date controls are proportionate and ordered
+
+            this.Resize -= Form_Main_Resize; // Avoid duplicate resize hook
+            this.Resize += Form_Main_Resize; // Keep top controls responsive to window size
         }
 
         /// <summary>
@@ -571,6 +576,7 @@ namespace StockAnalyzerProject // Project namespace
             StyleActionButton(button_loadData, UiAccent, Color.White);
             StyleActionButton(button_update, Color.FromArgb(67, 91, 122), Color.White);
             StyleActionButton(button_simulate, Color.FromArgb(233, 169, 80), Color.FromArgb(40, 34, 20));
+            if (button_loadData != null) button_loadData.Text = "Load CSV";
 
             if (comboBox_patterns != null)
             {
@@ -587,6 +593,8 @@ namespace StockAnalyzerProject // Project namespace
                 textBox_valueTimer.BorderStyle = BorderStyle.FixedSingle;
                 textBox_valueTimer.TextAlign = HorizontalAlignment.Center;
             }
+
+            ArrangeTopControlLayout();
         }
 
         /// <summary>
@@ -602,6 +610,108 @@ namespace StockAnalyzerProject // Project namespace
             button.ForeColor = foreColor;
             button.Font = new Font("Segoe UI Semibold", 9.5f, FontStyle.Bold, GraphicsUnit.Point);
             button.Padding = new Padding(10, 6, 10, 6);
+            button.AutoSize = false;
+            button.Size = new Size(110, 40);
+            button.Margin = new Padding(6, 6, 6, 6);
+        }
+
+        /// <summary>
+        /// Composes and sizes top panels so control positions remain clean and predictable.
+        /// </summary>
+        private void ArrangeTopControlLayout()
+        {
+            if (flowLayoutPanel_top == null || flowLayoutPanel_timer == null) return;
+
+            flowLayoutPanel_top.SuspendLayout();
+            flowLayoutPanel_top.AutoSize = false;
+            flowLayoutPanel_top.Height = 66;
+            flowLayoutPanel_top.FlowDirection = FlowDirection.LeftToRight;
+            flowLayoutPanel_top.RightToLeft = RightToLeft.No;
+            flowLayoutPanel_top.WrapContents = false;
+            flowLayoutPanel_top.AutoScroll = true;
+            flowLayoutPanel_top.Padding = new Padding(10, 8, 10, 8);
+
+            if (!_toolbarLayoutComposed)
+            {
+                flowLayoutPanel_top.Controls.Clear();
+                if (comboBox_patterns != null) flowLayoutPanel_top.Controls.Add(comboBox_patterns);
+                if (button_simulate != null) flowLayoutPanel_top.Controls.Add(button_simulate);
+                if (button_update != null) flowLayoutPanel_top.Controls.Add(button_update);
+                if (button_loadData != null) flowLayoutPanel_top.Controls.Add(button_loadData);
+                if (label_start != null) flowLayoutPanel_top.Controls.Add(label_start);
+                if (dateTimePicker_start != null) flowLayoutPanel_top.Controls.Add(dateTimePicker_start);
+                if (label_end != null) flowLayoutPanel_top.Controls.Add(label_end);
+                if (dateTimePicker_end != null) flowLayoutPanel_top.Controls.Add(dateTimePicker_end);
+                _toolbarLayoutComposed = true;
+            }
+
+            if (comboBox_patterns != null)
+            {
+                comboBox_patterns.Width = this.ClientSize.Width < 1280 ? 190 : 240;
+                comboBox_patterns.Margin = new Padding(6, 6, 10, 6);
+            }
+
+            if (label_start != null)
+            {
+                label_start.Text = "Start:";
+                label_start.AutoSize = true;
+                label_start.Margin = new Padding(14, 10, 6, 6);
+            }
+
+            if (dateTimePicker_start != null)
+            {
+                dateTimePicker_start.Format = DateTimePickerFormat.Short;
+                dateTimePicker_start.Width = 132;
+                dateTimePicker_start.Margin = new Padding(0, 6, 10, 6);
+            }
+
+            if (label_end != null)
+            {
+                label_end.Text = "End:";
+                label_end.AutoSize = true;
+                label_end.Margin = new Padding(10, 10, 6, 6);
+            }
+
+            if (dateTimePicker_end != null)
+            {
+                dateTimePicker_end.Format = DateTimePickerFormat.Short;
+                dateTimePicker_end.Width = 132;
+                dateTimePicker_end.Margin = new Padding(0, 6, 6, 6);
+            }
+
+            flowLayoutPanel_top.ResumeLayout();
+
+            flowLayoutPanel_timer.SuspendLayout();
+            flowLayoutPanel_timer.AutoSize = false;
+            flowLayoutPanel_timer.Height = 54;
+            flowLayoutPanel_timer.FlowDirection = FlowDirection.LeftToRight;
+            flowLayoutPanel_timer.RightToLeft = RightToLeft.No;
+            flowLayoutPanel_timer.WrapContents = false;
+            flowLayoutPanel_timer.AutoScroll = true;
+            flowLayoutPanel_timer.Padding = new Padding(10, 6, 10, 0);
+
+            if (textBox_valueTimer != null)
+            {
+                textBox_valueTimer.Width = 72;
+                textBox_valueTimer.Margin = new Padding(8, 6, 10, 6);
+            }
+
+            if (hScrollBar_timer != null)
+            {
+                int width = Math.Max(260, Math.Min(560, this.ClientSize.Width / 3));
+                hScrollBar_timer.Width = width;
+                hScrollBar_timer.Margin = new Padding(0, 11, 10, 6);
+            }
+
+            flowLayoutPanel_timer.ResumeLayout();
+        }
+
+        /// <summary>
+        /// Keeps top panel dimensions and control spacing correct after window resize.
+        /// </summary>
+        private void Form_Main_Resize(object sender, EventArgs e)
+        {
+            ArrangeTopControlLayout();
         }
 
         /// <summary>
