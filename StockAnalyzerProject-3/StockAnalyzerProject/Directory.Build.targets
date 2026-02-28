@@ -1,0 +1,12 @@
+<Project>
+  <!-- Stop MSBuild from copying CSV files from Stock_Data to the output folder. 
+       This avoids MSB3030 errors when those files are not present on this machine. -->
+  <ItemGroup>
+    <Content Update="Stock_Data\**\*.csv">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+    <None Update="Stock_Data\**\*.csv">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>

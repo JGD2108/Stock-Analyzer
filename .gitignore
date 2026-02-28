@@ -1,0 +1,19 @@
+# Visual Studio / IDE
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build artifacts
+[Bb]in/
+[Oo]bj/
+
+# Generated and cache files
+*.cache
+*.log
+
+# OS files
+Thumbs.db
+.DS_Store
